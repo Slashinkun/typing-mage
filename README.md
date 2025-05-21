@@ -1,4 +1,4 @@
-#Typing Mage
+# Typing Mage
 
 ## Histoire
 Vous êtes un sorcier qui habite dans la forêt. La vie dans la forêt est paisible, mais soudain, des goblins décident de prendre assaut de votre maison afin de la piller.
