@@ -145,6 +145,7 @@ const ctx = canvas.getContext("2d");
 let playerTyping = "";
 
 const playButton = document.getElementById("playButton");
+const userInput = document.getElementById("userInput");
 
 playButton.addEventListener("click",() => {
     if (!gameStarted) {
@@ -242,6 +243,7 @@ function draw(){
     
 
     if(lives < 0){
+        userInput.disabled = true
         drawGameOver();
         return;
     }else{
@@ -404,6 +406,7 @@ function drawBarrier(){
     ctx.fillRect(0,canvas.height-10,canvas.width, 10);
     ctx.globalAlpha = 1;
 }
+
 
 
 
