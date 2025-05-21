@@ -6,12 +6,20 @@ class Monster{
         this.width = width;
         this.height = height;
     }
+
+    draw(ctx){console.error("Peux pas dessiner le monstre")}
+
+    drawWord(ctx){}
+
+    update(){}
+
 }
 
 
 class Goblin extends Monster{
     constructor(posx,posy,word){
         super(posx,posy,word,10,50);
+        this.wordDisplay = new Word(word,posx,posy-10)
         this.frameCount = 2;
         this.frameTimer = 0;
         this.frameInterval = 20;
@@ -19,7 +27,9 @@ class Goblin extends Monster{
     }
 
     draw(ctx) {
-        this.drawWord(ctx);
+         this.wordDisplay.x = this.posx; // on met à jour la position
+         this.wordDisplay.y = this.posy - 10;
+         this.wordDisplay.draw(ctx, gameState.playerTyping);
         ctx.drawImage(
             goblinImage,
             this.frameIndex * 32, 0,    
@@ -31,39 +41,6 @@ class Goblin extends Monster{
         
     }
 
-    drawWord(ctx){
-        ctx.font = "16px serif";
-        let wordWidth = ctx.measureText(this.wordtoType).width;
-        let x = this.posx + 16 - wordWidth / 2;
-        const y = this.posy - 10;
-
-        //si le goblin est au bord du canvas, on replace le mot
-        if (x < 0) x = 0;
-        if (x > canvas.width - wordWidth) x = canvas.width - wordWidth;
-
-        let typedLength = 0;
-        if (playerTyping && this.wordtoType.startsWith(playerTyping)) {
-            typedLength = playerTyping.length;
-        }
-
-        for (let i = 0; i < this.wordtoType.length; i++) {
-            const char = this.wordtoType[i];
-            ctx.fillStyle = i < typedLength ? "red" : "black";
-            ctx.fillText(char, x, y);
-
-            if (char === " ") {
-                x += 8; // espace fixe entre mots
-            } else {
-                x += ctx.measureText(char).width;
-            }
-
-            
-        }
-    }
-
-    
-    
-
     update(){
         this.posy += 0.2; 
 
@@ -74,6 +51,43 @@ class Goblin extends Monster{
         }
     }
 }
+
+
+class Word{
+    constructor(word, x, y) {
+        this.word = word;
+        this.x = x;
+        this.y = y;
+    }   
+
+
+    draw(ctx, playerTyping) {
+        ctx.font = "16px serif";
+        let wordWidth = ctx.measureText(this.word).width;
+        let x = this.x + 16 - wordWidth / 2;
+
+        if (x < 0) x = 0;
+        if (x > canvas.width - wordWidth) x = canvas.width - wordWidth;
+
+        let typedLength = 0;
+        if (playerTyping && this.word.startsWith(playerTyping)) {
+            typedLength = playerTyping.length;
+        }
+
+        for (let i = 0; i < this.word.length; i++) {
+            const char = this.word[i];
+            ctx.fillStyle = i < typedLength ? "red" : "black";
+            ctx.fillText(char, x, this.y);
+
+            if (char === " ") {
+                x += 8;
+            } else {
+                x += ctx.measureText(char).width;
+            }
+        }
+    }
+}
+
 
 class Flame{
     constructor(x,y){
@@ -142,34 +156,36 @@ canvas.width = 800;
 canvas.height = 400;
 
 const ctx = canvas.getContext("2d");
-let playerTyping = "";
-
 const playButton = document.getElementById("playButton");
 const userInput = document.getElementById("userInput");
 
+
+const gameState = {
+    mobs: [],
+    flames: [],
+    currentTarget: null,
+    playerTyping: "",
+    currentWave: 0,
+    waveInProgress: false,
+    nextWaveMessage: "",
+    nextWaveMessageTimer: 0,
+    gameStarted: false,
+    spawnDelay: 1000,
+    mobsPerWave: 5,
+    lives: 9,
+};
+
 playButton.addEventListener("click",() => {
-    if (!gameStarted) {
-        gameStarted = true;
+    if (!gameState.gameStarted) {
+        gameState.gameStarted = true;
         playButton.style.display = "none";
         document.getElementById("player").style.display = "flex"
         document.getElementById("userInput").focus(); 
-        currentWave = 1
-        generateWave(mobsPerWave+currentWave)
+        gameState.currentWave = 1
+        generateWave(gameState.mobsPerWave+gameState.currentWave)
     }
 });
 
-
-let mobs = [];
-let currentTarget = null;
-let flames = [];
-let lives = 9
-let currentWave = 0
-let spawnDelay = 1000; //temps pour spawn les montres
-let mobsPerWave = 5;
-let waveInProgress = false;
-let nextWaveMessage = "";
-let nextWaveMessageTimer = 0;
-let gameStarted = false;
 
 
 const goblinImage = new Image();
@@ -180,6 +196,12 @@ livesImage.src = "assets/coeur.png";
 
 const flameImage = new Image();
 flameImage.src = "assets/fire_sprite.png";
+
+
+function createMonster(type,x,y,word){
+    if(type === "goblin") return new Goblin(x,y,word)
+}
+
 
 
 //cree une vague de "nb" monstres
@@ -193,7 +215,7 @@ function generateWave(nb){
         //si il ne reste plus de monstres a apparaitre
         if (spawnedMobs >= nb) {
             clearInterval(spawnInterval); //on arrete la fonction de spawn 
-            waveInProgress = false;
+            gameState.waveInProgress = false;
             return;
         }
     
@@ -204,13 +226,13 @@ function generateWave(nb){
     const randomWord = spells[Math.floor(Math.random() * spells.length)];
     const randomPosX = Math.floor(Math.random() * gameWidth);
 
-    mobs.push(new Goblin(randomPosX, spawnY, randomWord));
+    gameState.mobs.push(createMonster("goblin",randomPosX, spawnY, randomWord));
     spawnedMobs++;
-    }, spawnDelay)
+    }, gameState.spawnDelay)
 }
 
 function updateMobs(){
-    for(let mob of mobs){
+    for(let mob of gameState.mobs){
         mob.update();
     }
 }
@@ -220,11 +242,11 @@ function updateMobs(){
 function drawMobs(){
     updateMobs();
 
-    let sortedMobs = mobs.slice().sort((a, b) => a.posy - b.posy);
+    let sortedMobs = gameState.mobs.slice().sort((a, b) => a.posy - b.posy);
 
     for (let mob of sortedMobs) {
         mob.draw(ctx);
-        if (mob === currentTarget) {
+        if (mob === gameState.currentTarget) {
             ctx.strokeStyle = "red";
             ctx.strokeRect(mob.posx - 10, mob.posy - 10, 32, 32);
         }
@@ -237,12 +259,12 @@ function drawMobs(){
 //dessine sur le canvas les elements
 function draw(){
 
-    if(!gameStarted){
+    if(!gameState.gameStarted){
         return;
     }
     
 
-    if(lives < 0){
+    if(gameState.lives < 0){
         userInput.disabled = true
         drawGameOver();
         return;
@@ -259,38 +281,38 @@ function draw(){
     
     
     if(mobOutOfScreen()){
-        lives--;
+        gameState.lives--;
     }
 
-    if (mobs.length === 0 && !waveInProgress) { //quand il plus d'ennemi et que la vague est fini
-        waveInProgress = true;
-        currentWave++;
-        if(currentWave > 1){
-             nextWaveMessage = `⚔ Vague ${currentWave} dans 2 secondes...`;
-             nextWaveMessageTimer = 200;
+    if (gameState.mobs.length === 0 && !gameState.waveInProgress) { //quand il plus d'ennemi et que la vague est fini
+        gameState.waveInProgress = true;
+        gameState.currentWave++;
+        if(gameState.currentWave > 1){
+             gameState.nextWaveMessage = `⚔ Vague ${gameState.currentWave} dans 2 secondes...`;
+             gameState.nextWaveMessageTimer = 200;
         }
        
         //on commence a faire apparaitre les nouveaux monstres
         setTimeout(() => {
             
-            spawnDelay = Math.max(200, spawnDelay - 100); 
-            const nbMobs = mobsPerWave + currentWave;
+            gameState.spawnDelay = Math.max(200, gameState.spawnDelay - 100); 
+            const nbMobs = gameState.mobsPerWave + gameState.currentWave;
             generateWave(nbMobs);
-            nextWaveMessage = ""
+            gameState.nextWaveMessage = ""
         }, 2000); 
     }
 }
    
 
 function updateFlames() {
-    for (let flame of flames) {
+    for (let flame of gameState.flames) {
         flame.update();
     }
-    flames = flames.filter(f => !f.finished);
+    gameState.flames = gameState.flames.filter(f => !f.finished);
 }
 
 function drawFlames() {
-    for (let flame of flames) {
+    for (let flame of gameState.flames) {
         flame.draw(ctx);
     }
 }
@@ -298,10 +320,10 @@ function drawFlames() {
 
 function drawLives(){
     
-    let nbPixel = 16 * lives;
+    let nbPixel = 16 * gameState.lives;
     let start = canvas.width-nbPixel;
 
-    for(let i = 0; i < lives; i++){
+    for(let i = 0; i < gameState.lives; i++){
         ctx.drawImage(livesImage,start + (i * 16), 0);
     }
 
@@ -309,12 +331,12 @@ function drawLives(){
 
 //dessine l'annonce de la prochaine vague
 function drawNextWaveMessage() {
-    if (nextWaveMessageTimer > 0) {
+    if (gameState.nextWaveMessageTimer > 0) {
         ctx.fillStyle = "white";
         ctx.font = "24px serif";
         ctx.textAlign = "center";
-        ctx.fillText(nextWaveMessage, canvas.width / 2, canvas.height / 2);
-        nextWaveMessageTimer--;
+        ctx.fillText(gameState.nextWaveMessage, canvas.width / 2, canvas.height / 2);
+        gameState.nextWaveMessageTimer--;
     }
 }
     
@@ -329,17 +351,17 @@ function drawGameOver(){
 
 //regarde le mot que l'utilisateur a tapé
 function checkTyping(word){
-    playerTyping = word;
+    gameState.playerTyping = word;
     
-    let targets = mobs.filter(mob => mob.wordtoType.startsWith(playerTyping)); //on cherche les monstres ou les mots correspond au mot du joueur
-    if(targets.length >= 1 && playerTyping === targets[0].wordtoType) { //si il y a au moins 1 monstre
+    let targets = gameState.mobs.filter(mob => mob.wordtoType.startsWith(gameState.playerTyping)); //on cherche les monstres ou les mots correspond au mot du joueur
+    if(targets.length >= 1 && gameState.playerTyping === targets[0].wordtoType) { //si il y a au moins 1 monstre
         for(let targetedMob of targets){
-            flames.push(new Flame(targetedMob.posx, targetedMob.posy));
-            mobs = mobs.filter(mob => !targets.includes(mob)); //on elimine les monstres qui possede le meme mot que le joueur
+            gameState.flames.push(new Flame(targetedMob.posx, targetedMob.posy));
+            gameState.mobs = gameState.mobs.filter(mob => !targets.includes(mob)); //on elimine les monstres qui possede le meme mot que le joueur
         } 
-        playerTyping = "";
+        gameState.playerTyping = "";
         document.getElementById("userInput").value = "";
-        currentTarget = null;
+        gameState.currentTarget = null;
     }
 
     
@@ -363,12 +385,12 @@ document.getElementById("userInput").addEventListener("input",(event) => {
 
 //trouver le monstre le plus proche de la limite du jeu (barrière)
 function mobNearBarrier(){
-    if(mobs.length === 0) return null;
+    if(gameState.mobs.length === 0) return null;
 
-    let nearestMob = mobs[0];
+    let nearestMob = gameState.mobs[0];
     let minDist = canvas.height - 10 - nearestMob.posy;
 
-    for (let mob of mobs) {
+    for (let mob of gameState.mobs) {
         let distToBarrier = canvas.height - 10 - mob.posy;
         if (distToBarrier >= 0 && distToBarrier < minDist) {
             nearestMob = mob;
@@ -382,13 +404,13 @@ function mobNearBarrier(){
 
 //changer la cible verrouillé
 function lockOnMob(){
-    currentTarget = mobNearBarrier();
+    gameState.currentTarget = mobNearBarrier();
 }
 
 function mobOutOfScreen(){
     let lost = false;
 
-    mobs = mobs.filter(mob => {
+    gameState.mobs = gameState.mobs.filter(mob => {
         if (mob.posy > canvas.height + 20) {
             lost = true;
             return false;
