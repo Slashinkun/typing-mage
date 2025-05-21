@@ -11,7 +11,7 @@ Pour éliminer ces crapules de goblins, lancez des sorts pour défendre votre ma
 Écrivez au clavier les mots qui s'affichent à l'écran avant que les goblins n'atteignent votre maison.
 
 ## Jouer au jeu
-
+[Jouer](https://slashinkun.github.io/typing-mage/)
 
 ## Jouer localement au jeu
 
