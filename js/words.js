@@ -1,0 +1,13 @@
+export let words = ["ignis flamma",
+    "pyra ardentis",
+    "solis ignis",
+    "flamora incendo",
+    "flamme",
+    "braise",
+    "etincelle",
+    "fumée",
+    "chaleur",
+    "incandescence",
+    "cendres",
+    "brasier",
+    "geyserdeflamme"   ]
