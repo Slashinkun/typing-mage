@@ -5,6 +5,7 @@ export let gameState = {
     playerTyping: "",
     currentWave: 0,
     waveInProgress: false,
+    waitingNextWave : false,
     nextWaveMessage: "",
     nextWaveMessageTimer: 0,
     damageFlash : 0,

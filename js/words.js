@@ -1,13 +1,12 @@
 export let words = ["ignis flamma",
-    "pyra ardentis",
-    "solis ignis",
-    "flamora incendo",
+    "pyro",
+    "igni",
+    "incendio",
     "flamme",
     "braise",
     "etincelle",
     "fumée",
     "chaleur",
-    "incandescence",
     "cendres",
     "brasier",
-    "geyserdeflamme"   ]
+     ]

@@ -16,6 +16,8 @@ import {
 //barrière  10px * longueur du canvas   
 // hauteur du canvas - 10
 
+//a faire : boss de fin et fin du jeu (ecran de fin)
+// mot long pour le boss de fin
 
 const spells = words
 const BARRIER_HEIGHT = 10;
@@ -40,9 +42,11 @@ playButton.addEventListener("click",() => {
         gameState.gameStarted = true;
         playButton.style.display = "none";
         document.getElementById("player").style.display = "flex"
-        document.getElementById("userInput").focus(); 
         gameState.currentWave = 1
+        gameState.waitingNextWave = false   
         generateWave(gameState.mobsPerWave+gameState.currentWave)
+        gameState.waveInProgress = true;
+        document.getElementById("userInput").focus(); 
     }
 });
 
@@ -54,7 +58,7 @@ function createMonster(type,x,y,word){
 
 //cree une vague de "nb" monstres
 function generateWave(nb){
-    gameState.waveInProgress = true; 
+    
     const gameWidth = canvas.width - 32; 
     //const spawnY = -32; 
      
@@ -81,6 +85,38 @@ function generateWave(nb){
     }, gameState.spawnDelay)
 }
 
+function startNextWave() {
+    if (gameState.waitingNextWave) return;
+
+    gameState.waitingNextWave = true;
+    
+    gameState.waveInProgress = false;
+    gameState.currentWave++;
+    userInput.value = "";
+
+    if (gameState.currentWave > 1) {
+        userInput.disabled = true
+        gameState.nextWaveMessage = `⚔ Vague ${gameState.currentWave} dans 2 secondes...`;
+        gameState.nextWaveMessageTimer = NEXT_WAVE_MSG_DURATION;
+    }
+
+    setTimeout(() => {
+        console.log("Nouvelle vague");
+        
+        gameState.spawnDelay = Math.max(200, gameState.spawnDelay - 100);
+        const nbMobs = gameState.mobsPerWave + gameState.currentWave;
+        generateWave(nbMobs);
+        gameState.nextWaveMessage = "";
+        gameState.waitingNextWave = false;
+        gameState.waveInProgress = true;
+
+        userInput.disabled = false
+        userInput.focus()
+    }, NEXT_WAVE_DELAY);
+}
+
+
+
 function isOverlapping(x, y, mobs) {
     return mobs.some(m => {
         const dx = m.posx - x;
@@ -104,23 +140,32 @@ function draw(){
     
 
     if(gameState.lives <= 0){
+        console.log("Game over");
+        
         userInput.disabled = true
         drawGameOver(ctx,canvas);
         return;
-    }else{
-        lockOnMob();
-        drawBackround(ctx,canvas);
-        updateMobs();
-        drawMobs(ctx,gameState.mobs,gameState.currentTarget);
-        updateFlames();
-        drawFlames(ctx,gameState.flames);
-        drawBarrier(ctx,canvas);
-        drawLives(ctx,canvas,gameState.lives);
-        drawNextWaveMessage(ctx,canvas,gameState.nextWaveMessage,gameState.nextWaveMessageTimer);
-
-        
-
     }
+
+    
+
+    if (gameState.mobs.length === 0 && gameState.waveInProgress && !gameState.waitingNextWave) { //quand il plus d'ennemi et que la vague est fini
+        startNextWave();
+    }
+
+    lockOnMob();
+    drawBackround(ctx,canvas);
+    updateMobs();
+    drawMobs(ctx,gameState.mobs,gameState.currentTarget);
+    updateFlames();
+    drawFlames(ctx,gameState.flames);
+    drawBarrier(ctx,canvas);
+    drawLives(ctx,canvas,gameState.lives);
+    drawNextWaveMessage(ctx,canvas,gameState.nextWaveMessage,gameState.nextWaveMessageTimer);
+
+    
+
+    
 
     if (gameState.damageFlash) {
         drawHurtAnimation(ctx, canvas);
@@ -134,24 +179,7 @@ function draw(){
         gameState.damageFlash = DAMAGE_FLASH_DURATION; 
     }
 
-    if (gameState.mobs.length === 0 && gameState.waveInProgress) { //quand il plus d'ennemi et que la vague est fini
-        gameState.waveInProgress = false;
-        gameState.currentWave++;
-        userInput.value = ""
-        if(gameState.currentWave > 1){
-             gameState.nextWaveMessage = `⚔ Vague ${gameState.currentWave} dans 2 secondes...`;
-             gameState.nextWaveMessageTimer = NEXT_WAVE_MSG_DURATION;
-        }
-       
-        //on commence a faire apparaitre les nouveaux monstres
-        setTimeout(() => {
-            
-            gameState.spawnDelay = Math.max(200, gameState.spawnDelay - 100); 
-            const nbMobs = gameState.mobsPerWave + gameState.currentWave;
-            generateWave(nbMobs);
-            gameState.nextWaveMessage = ""
-        }, NEXT_WAVE_DELAY); 
-    }
+    
 }
    
 
