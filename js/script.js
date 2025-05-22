@@ -18,6 +18,12 @@ import {
 
 
 const spells = words
+const BARRIER_HEIGHT = 10;
+const MIN_MOB_DISTANCE = 50
+const MOB_SPAWN_Y = -32
+const DAMAGE_FLASH_DURATION = 10
+const NEXT_WAVE_MSG_DURATION = 200;
+const NEXT_WAVE_DELAY = 2000;
    
 const canvas = document.querySelector("canvas");
 canvas.width = 800;
@@ -26,6 +32,8 @@ canvas.height = 400;
 const ctx = canvas.getContext("2d");
 const playButton = document.getElementById("playButton");
 const userInput = document.getElementById("userInput");
+
+const DRAW_INTERVAL = 10
 
 playButton.addEventListener("click",() => {
     if (!gameState.gameStarted) {
@@ -48,7 +56,7 @@ function createMonster(type,x,y,word){
 function generateWave(nb){
     gameState.waveInProgress = true; 
     const gameWidth = canvas.width - 32; 
-    const spawnY = -32; 
+    //const spawnY = -32; 
      
     let spawnedMobs = 0;
 
@@ -63,21 +71,21 @@ function generateWave(nb){
             x = Math.floor(Math.random() * gameWidth);
             attempts++;
             if (attempts > 50) break; 
-        } while (isOverlapping(x, spawnY, gameState.mobs));
+        } while (isOverlapping(x, MOB_SPAWN_Y, gameState.mobs));
     
     
 
     const randomWord = spells[Math.floor(Math.random() * spells.length)];
-    gameState.mobs.push(createMonster("goblin",x, spawnY, randomWord));
+    gameState.mobs.push(createMonster("goblin",x, MOB_SPAWN_Y, randomWord));
     spawnedMobs++;
     }, gameState.spawnDelay)
 }
 
-function isOverlapping(x, y, mobs, minDistance = 50) {
+function isOverlapping(x, y, mobs) {
     return mobs.some(m => {
         const dx = m.posx - x;
         const dy = m.posy - y;
-        return Math.sqrt(dx * dx + dy * dy) < minDistance;
+        return Math.sqrt(dx * dx + dy * dy) < MIN_MOB_DISTANCE;
     });
 }
 
@@ -95,7 +103,7 @@ function draw(){
     }
     
 
-    if(gameState.lives < 0){
+    if(gameState.lives <= 0){
         userInput.disabled = true
         drawGameOver(ctx,canvas);
         return;
@@ -123,7 +131,7 @@ function draw(){
     const lostMobs = mobOutOfScreen();
     if (lostMobs > 0) {
         gameState.lives -= lostMobs;
-        gameState.damageFlash = 10; 
+        gameState.damageFlash = DAMAGE_FLASH_DURATION; 
     }
 
     if (gameState.mobs.length === 0 && gameState.waveInProgress) { //quand il plus d'ennemi et que la vague est fini
@@ -132,7 +140,7 @@ function draw(){
         userInput.value = ""
         if(gameState.currentWave > 1){
              gameState.nextWaveMessage = `⚔ Vague ${gameState.currentWave} dans 2 secondes...`;
-             gameState.nextWaveMessageTimer = 200;
+             gameState.nextWaveMessageTimer = NEXT_WAVE_MSG_DURATION;
         }
        
         //on commence a faire apparaitre les nouveaux monstres
@@ -142,7 +150,7 @@ function draw(){
             const nbMobs = gameState.mobsPerWave + gameState.currentWave;
             generateWave(nbMobs);
             gameState.nextWaveMessage = ""
-        }, 2000); 
+        }, NEXT_WAVE_DELAY); 
     }
 }
    
@@ -186,10 +194,10 @@ function mobNearBarrier(){
     if(gameState.mobs.length === 0) return null;
 
     let nearestMob = gameState.mobs[0];
-    let minDist = canvas.height - 10 - nearestMob.posy;
+    let minDist = canvas.height - BARRIER_HEIGHT - nearestMob.posy;
 
     for (let mob of gameState.mobs) {
-        let distToBarrier = canvas.height - 10 - mob.posy;
+        let distToBarrier = canvas.height - BARRIER_HEIGHT - mob.posy;
         if (distToBarrier >= 0 && distToBarrier < minDist) {
             nearestMob = mob;
             minDist = distToBarrier;
@@ -210,7 +218,7 @@ function mobOutOfScreen(){
     let lostCount = 0;
 
     gameState.mobs = gameState.mobs.filter(mob => {
-        if (mob.posy > canvas.height - 10) {
+        if (mob.posy > canvas.height - BARRIER_HEIGHT) {
             lostCount++;
             return false;
         }
@@ -222,4 +230,4 @@ function mobOutOfScreen(){
 
 
 
-setInterval(draw,10);
+setInterval(draw,DRAW_INTERVAL);

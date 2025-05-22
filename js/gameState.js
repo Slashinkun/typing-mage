@@ -10,6 +10,6 @@ export let gameState = {
     damageFlash : 0,
     gameStarted: false,
     spawnDelay: 1000,
-    mobsPerWave: 5,
+    mobsPerWave: 3,
     lives: 9,
 };
