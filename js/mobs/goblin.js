@@ -3,7 +3,7 @@ import { gameState } from "../gameState.js";
 import { TypingWord } from "../typingWord.js";
 
 const goblinImage = new Image();
-goblinImage.src = "../assets/goblin_walk.png";
+goblinImage.src = "/typing-mage/assets/goblin_walk.png";
 
 
 export class Goblin extends Monster{
