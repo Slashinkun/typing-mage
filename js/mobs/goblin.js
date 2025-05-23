@@ -8,9 +8,9 @@ goblinImage.src = "../assets/goblin_walk.png";
 
 export class Goblin extends Monster{
     constructor(posx,posy,word){
-        super(posx,posy,word,10,50);
+        super(posx,posy,word,32,32);
         this.wordDisplay = new TypingWord(word,posx,posy-10)
-        this.frameCount = 2;
+        this.frameCount = 2; //nombre de frame du sprite
         this.frameTimer = 0;
         this.frameInterval = 20;
         this.frameIndex = 0;

@@ -1,4 +1,4 @@
-export let words = ["ignis flamma",
+export let words = [
     "pyro",
     "igni",
     "incendio",
@@ -9,4 +9,7 @@ export let words = ["ignis flamma",
     "chaleur",
     "cendres",
     "brasier",
-     ]
+]
+
+
+export let bossWords = ["supercalifragilisticexpialidocious"] 

@@ -1,6 +1,7 @@
 import { Goblin } from "./mobs/goblin.js";
+import { Orc } from "./mobs/orc.js";
 import { Flame } from "./flame.js";
-import { words } from "./words.js";
+import { words,bossWords } from "./words.js";
 import { gameState } from "./gameState.js";
 import {
     drawBackround,
@@ -10,7 +11,8 @@ import {
     drawGameOver,
     drawHurtAnimation,
     drawMobs,
-    drawFlames
+    drawFlames,
+    drawWinScreen
 } from "./renderer.js";
 
 //barrière  10px * longueur du canvas   
@@ -37,6 +39,11 @@ const userInput = document.getElementById("userInput");
 
 const DRAW_INTERVAL = 10
 
+const FINAL_WAVE = 15
+
+let isBossAppeared = false
+let isBossDefeated = false
+
 playButton.addEventListener("click",() => {
     if (!gameState.gameStarted) {
         gameState.gameStarted = true;
@@ -52,46 +59,50 @@ playButton.addEventListener("click",() => {
 
 function createMonster(type,x,y,word){
     if(type === "goblin") return new Goblin(x,y,word)
+    if(type === "orc") return new Orc(x,y,word)
+
+    
 }
 
 
+function generateBoss(){
+    gameState.mobs = []
+    let bossWord = bossWords[0]
+    gameState.mobs.push(createMonster("orc",canvas.width/2,MOB_SPAWN_Y,bossWord))
+    isBossAppeared = true
+}
 
 //cree une vague de "nb" monstres
 function generateWave(nb){
-    
     const gameWidth = canvas.width - 32; 
-    //const spawnY = -32; 
-     
     let spawnedMobs = 0;
 
     const spawnInterval = setInterval(() => {
          if (spawnedMobs >= nb) {
             clearInterval(spawnInterval); 
+            gameState.waitingNextWave = false;
             return;
         }
 
-        let x,attempts = 0
+        let x,attempts = 0;
         do {
             x = Math.floor(Math.random() * gameWidth);
             attempts++;
             if (attempts > 50) break; 
         } while (isOverlapping(x, MOB_SPAWN_Y, gameState.mobs));
     
-    
-
-    const randomWord = spells[Math.floor(Math.random() * spells.length)];
-    gameState.mobs.push(createMonster("goblin",x, MOB_SPAWN_Y, randomWord));
-    spawnedMobs++;
+        const randomWord = spells[Math.floor(Math.random() * spells.length)];
+        gameState.mobs.push(createMonster("goblin", x, MOB_SPAWN_Y, randomWord));
+        spawnedMobs++;
     }, gameState.spawnDelay)
 }
 
 function startNextWave() {
-    if (gameState.waitingNextWave) return;
-
-    gameState.waitingNextWave = true;
+  if (gameState.waitingNextWave || gameState.currentWave >= FINAL_WAVE) return;
     
+    // Fin de vague, début attente
+    gameState.waitingNextWave = true;
     gameState.waveInProgress = false;
-    gameState.currentWave++;
     userInput.value = "";
 
     if (gameState.currentWave > 1) {
@@ -101,17 +112,24 @@ function startNextWave() {
     }
 
     setTimeout(() => {
-        console.log("Nouvelle vague");
+        gameState.currentWave++;    
         
         gameState.spawnDelay = Math.max(200, gameState.spawnDelay - 100);
         const nbMobs = gameState.mobsPerWave + gameState.currentWave;
         generateWave(nbMobs);
+        
         gameState.nextWaveMessage = "";
-        gameState.waitingNextWave = false;
         gameState.waveInProgress = true;
+        //gameState.waitingNextWave = false;
+
 
         userInput.disabled = false
         userInput.focus()
+
+
+        setTimeout(() => {
+        gameState.waitingNextWave = false;
+        }, 1000);
     }, NEXT_WAVE_DELAY);
 }
 
@@ -147,9 +165,21 @@ function draw(){
         return;
     }
 
-    
+    if (
+    gameState.currentWave === FINAL_WAVE &&
+    !isBossAppeared &&
+    gameState.mobs.length === 0
+    ) {
+        generateBoss();
+        return;
+    }
 
-    if (gameState.mobs.length === 0 && gameState.waveInProgress && !gameState.waitingNextWave) { //quand il plus d'ennemi et que la vague est fini
+    if (
+    gameState.mobs.length === 0 &&
+    gameState.waveInProgress &&
+    !gameState.waitingNextWave &&
+    gameState.currentWave < FINAL_WAVE
+    ) {
         startNextWave();
     }
 
@@ -177,6 +207,15 @@ function draw(){
     if (lostMobs > 0) {
         gameState.lives -= lostMobs;
         gameState.damageFlash = DAMAGE_FLASH_DURATION; 
+    }
+
+     if (isBossAppeared && gameState.mobs.length === 0 && !isBossDefeated) {
+        isBossDefeated = true;
+        userInput.disabled = true;
+        gameState.nextWaveMessage = "🎉 Bravo ! Vous avez vaincu le boss final !";
+        gameState.nextWaveMessageTimer = 500;
+        drawWinScreen(ctx,canvas)
+    
     }
 
     

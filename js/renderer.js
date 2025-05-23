@@ -71,3 +71,13 @@ export function drawHurtAnimation(ctx,canvas){
     ctx.fillStyle = "rgba(255, 0, 0, 0.4)"; 
     ctx.fillRect(0, 0, canvas.width, canvas.height); 
 }
+
+export function drawWinScreen(ctx,canvas){
+    ctx.clearRect(0,0,canvas.width,canvas.height)
+    ctx.fillStyle = "black"
+    ctx.fillRect(0,0,canvas.width,canvas.height)
+    ctx.fillStyle = "white";
+    ctx.font = "24px serif";
+    ctx.textAlign = "center";
+    ctx.fillText("Vous avez gagné !", canvas.width / 2, canvas.height / 2);
+}
