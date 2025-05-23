@@ -1,0 +1,17 @@
+export let gameState = {
+    mobs: [],
+    flames: [],
+    currentTarget: null,
+    playerTyping: "",
+    currentWave: 1,
+    waveInProgress: false,
+    waitingNextWave : false,
+    nextWaveMessage: "",
+    nextWaveMessageTimer: 0,
+    damageFlash : 0,
+    gameStarted: false,
+    spawnDelay: 1000,
+    mobsPerWave: 3,
+    lives: 9,
+    mobsKilled : 0,
+};
