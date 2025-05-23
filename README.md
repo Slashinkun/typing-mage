@@ -15,4 +15,4 @@ Pour éliminer ces crapules de goblins, lancez des sorts pour défendre votre ma
 
 ## Jouer localement au jeu
 
-Cloner/Telecharger le repo puis lancer le fichier HTML sur un navigateur (ou bien sur un serveur local)
+Cloner/Telecharger le repo puis lancer le fichier HTML sur un serveur local
