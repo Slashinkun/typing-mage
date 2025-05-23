@@ -1,5 +1,5 @@
 const livesImage = new Image();
-livesImage.src = "../assets/coeur.png";
+livesImage.src = "/typing-mage/assets/coeur.png";
 
 
 export function drawLives(ctx,canvas,lives){
