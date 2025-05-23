@@ -1,5 +1,5 @@
 const flameImage = new Image();
-flameImage.src = "../assets/fire_sprite.png";
+flameImage.src = "/typing-mage/assets/fire_sprite.png";
 
 export class Flame{
     constructor(x,y){
